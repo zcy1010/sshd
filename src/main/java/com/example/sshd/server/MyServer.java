@@ -1,6 +1,7 @@
 package com.example.sshd.server;
 
 import com.example.sshd.CustomFileSystemFactory;
+import com.example.sshd.CustomIoServiceEventListener;
 import com.example.sshd.CustomSessionListener;
 import com.example.sshd.CustomSftpEventListener;
 import com.example.sshd.thread2.CustomIoServiceFactoryFactoryTwo;
@@ -78,7 +79,7 @@ public class MyServer {
 
         // TODO 1
         // 自定义 NIO Workers 默认cpu核心线程数+1 负责处理网络的 IO 操作。比如处理 Socket 的读写操作，解析协议等。
-//        sshServer.setNioWorkers(10);
+        sshServer.setNioWorkers(10);
 //        sshServer.getNioWorkers();
 //        System.out.println(" sshServer.getNioWorkers();"+ sshServer.getNioWorkers());
         // 自定义定时线程池
@@ -90,21 +91,23 @@ public class MyServer {
 
         // TODO 2
         // 使用自定义线程池
-        CloseableExecutorService executorService = CustomThreadPool.create(4, "SSHwwD");
+//        CloseableExecutorService executorService = CustomThreadPool.create(4, "SSHwwD");
         // 创建 resume tasks 线程池
-        CloseableExecutorService resumeTasksExecutorService = ThreadUtils.newFixedThreadPool("dfgdsfgsdfg-tasks-thread-pool", 2);
+//        CloseableExecutorService resumeTasksExecutorService = ThreadUtils.newFixedThreadPool("dfgdsfgsdfg-tasks-thread-pool", 2);
         // 使用自定义的 IoServiceFactoryFactory
-        sshServer.setIoServiceFactoryFactory(new CustomIoServiceFactoryFactoryTwo(executorService, resumeTasksExecutorService));
+//        sshServer.setIoServiceFactoryFactory(new CustomIoServiceFactoryFactoryTwo(executorService, resumeTasksExecutorService));
 
         // TODO 3
 //        sshServer.setIoServiceFactoryFactory(CustomIoServiceFactoryFactoryThree.createWithCustomPools());
         // 配置自定义线程池
         CustomIoServiceFactoryFactoryThree ioFactory = CustomIoServiceFactoryFactoryThree.createWithCustomPools();
         sshServer.setIoServiceFactoryFactory(ioFactory);
-
+        CustomIoServiceEventListener  customIoServiceEventListener=new CustomIoServiceEventListener();
+        sshServer.setIoServiceEventListener(customIoServiceEventListener);
         sshServer.start();
         // 打印线程池状态
-        logThreadPoolStatus(ioFactory);
+//        logThreadPoolStatus(ioFactory);
+        System.out.println(sshServer.getNioWorkers());
 
         System.out.println("SSH server started...");
         try {
