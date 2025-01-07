@@ -4,6 +4,8 @@ import com.example.sshd.CustomFileSystemFactory;
 import com.example.sshd.CustomIoServiceEventListener;
 import com.example.sshd.CustomSessionListener;
 import com.example.sshd.CustomSftpEventListener;
+import com.example.sshd.channel.CustomChannelListener;
+import com.example.sshd.err.DetailedSftpErrorStatusDataHandler;
 import com.example.sshd.thread2.CustomIoServiceFactoryFactoryTwo;
 import com.example.sshd.thread2.CustomThreadPool;
 import com.example.sshd.thread3.CustomIoServiceFactoryFactoryThree;
@@ -52,6 +54,7 @@ public class MyServer {
 
         sshServer.getProperties().put("auth-timeout", "10000"); // 10秒认证超时
         sshServer.getProperties().put("idle-timeout", "200000"); // 20秒空闲超时
+        sshServer.getProperties().put("kb-server-interactive-prompt", "ppppaswword");
         sshServer.setForwardingFilter(AcceptAllForwardingFilter.INSTANCE);
 
         // 设置用户在 SFTP 中的根目录
@@ -71,6 +74,7 @@ public class MyServer {
 
         // 配置 SFTP 子系统（如果需要的话）
         SftpSubsystemFactory factory = new SftpSubsystemFactory.Builder().build();
+        factory.setErrorStatusDataHandler(new DetailedSftpErrorStatusDataHandler());
 
         // 注册自定义文件校验监听器
         factory.addSftpEventListener(new CustomSftpEventListener());
@@ -104,6 +108,8 @@ public class MyServer {
         sshServer.setIoServiceFactoryFactory(ioFactory);
         CustomIoServiceEventListener  customIoServiceEventListener=new CustomIoServiceEventListener();
         sshServer.setIoServiceEventListener(customIoServiceEventListener);
+        sshServer.addChannelListener(new CustomChannelListener());
+
         sshServer.start();
         // 打印线程池状态
 //        logThreadPoolStatus(ioFactory);

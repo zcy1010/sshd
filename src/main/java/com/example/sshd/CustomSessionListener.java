@@ -1,5 +1,6 @@
 package com.example.sshd;
 
+import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -44,16 +45,16 @@ public class CustomSessionListener implements SessionListener {
     /**
      * 构造方法
      */
-    public CustomSessionListener() {
-        // 启动定时任务，每隔 5 秒打印连接状态
-        scheduler.scheduleAtFixedRate(() -> {
-            try {
-                printConnectionStatus();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }, 0, 5, TimeUnit.SECONDS); // 初始延迟为 0 秒，每隔 5 秒执行一次
-    }
+//    public CustomSessionListener() {
+//        // 启动定时任务，每隔 5 秒打印连接状态
+//        scheduler.scheduleAtFixedRate(() -> {
+//            try {
+//                printConnectionStatus();
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        }, 0, 5, TimeUnit.SECONDS); // 初始延迟为 0 秒，每隔 5 秒执行一次
+//    }
 
     /**
      * 打印当前连接状态
@@ -91,7 +92,7 @@ public class CustomSessionListener implements SessionListener {
         String remoteAddress = session.getIoSession().getRemoteAddress().toString();
         System.out.println(
             "Session 开始创建: IP 为 " + remoteAddress + ", 时间为 " + java.time.Instant.now());
-
+        System.out.println("session开始建立"+ session.getIoSession().getId() +session.getUsername());
     }
 
     /**
@@ -110,6 +111,8 @@ public class CustomSessionListener implements SessionListener {
         System.out.println("连接建立成功: ");
         System.out.println("IP: " + remoteAddress);
         System.out.println("时间戳: " + timestamp);
+        System.out.println("session建立成功"+ session.getIoSession().getId() +session.getUsername());
+
     }
 
     /**
@@ -135,6 +138,8 @@ public class CustomSessionListener implements SessionListener {
 
         System.out.println(
             "连接关闭，当前全局连接数为： " + globalConnectionCount.get());
+        System.out.println("session关闭"+ session.getIoSession().getId() +session.getUsername());
+
     }
 
     /**
@@ -165,13 +170,18 @@ public class CustomSessionListener implements SessionListener {
             } else {
                 System.out.println("当前用户 " + username + " 的连接数为：" + userConnections);
             }
+            System.out.println("session认证成功"+ session.getIoSession().getId() +session.getUsername());
+
         }
+
     }
 
     @Override
     public void sessionException(Session session, Throwable t) {
         System.err.println("发生错误，session为： " + session);
         t.printStackTrace();
+        System.out.println("session错误"+ session.getIoSession().getId() +session.getUsername());
+
     }
 
     /**
@@ -188,5 +198,7 @@ public class CustomSessionListener implements SessionListener {
     public void sessionDisconnect(Session session, int reason, String msg, String language,
         boolean initiator) {
         System.out.println("连接断开，连接断开原因： Reason: " + reason + ", 相关信息为： " + msg);
+        System.out.println("session断开"+ session.getIoSession().getId() +session.getUsername());
+
     }
 }

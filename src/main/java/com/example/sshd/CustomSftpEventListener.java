@@ -26,11 +26,11 @@ import org.apache.sshd.sftp.server.SftpEventListener;
  */
 public class CustomSftpEventListener implements SftpEventListener {
 
-    // 限制的文件类型（后缀）
+    // 限制的文件类型（后缀） (黑名单)
     private static final Set<String> DISALLOWED_FILE_EXTENSIONS = new HashSet<>(
         Arrays.asList(".zip", ".txt"));
     // 最大允许的文件大小（1MB）
-    private static final long MAX_FILE_SIZE = 1 * 1024;
+    private static final long MAX_FILE_SIZE = 10*1024 * 1024;
     private static final boolean DISABLE_UPLOAD = true;
     private static final boolean DISABLE_DELETE = true;
     private final Map<Path, Boolean> fileLimitExceeded = new ConcurrentHashMap<>();
@@ -55,11 +55,6 @@ public class CustomSftpEventListener implements SftpEventListener {
         System.out.println("当前线程: " + Thread.currentThread().getName());
         if (DISABLE_UPLOAD) {
             Path filePath = localHandle.getFile();
-            try {
-                Thread.sleep(10000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
             System.out.println("writing上传文件: " + filePath.getFileName());
         }
 
