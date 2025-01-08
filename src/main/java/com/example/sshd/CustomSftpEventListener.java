@@ -1,10 +1,12 @@
 package com.example.sshd;
 
 
+import java.nio.file.CopyOption;
 import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -105,6 +107,7 @@ public class CustomSftpEventListener implements SftpEventListener {
     public void removing(ServerSession session, Path path, boolean isDirectory) throws IOException {
         if (DISABLE_DELETE) {
             System.out.println("removing删除文件: " + path.getFileName());
+//            throw new IOException("禁止删除");
         }
     }
 
@@ -113,8 +116,24 @@ public class CustomSftpEventListener implements SftpEventListener {
         // 如果删除被触发，可以记录日志。
         if (DISABLE_DELETE) {
             System.out.println("removed尝试删除文件被拒绝: " + path.getFileName());
+//            throw new IOException("禁止删除");
         }
     }
+
+    @Override
+    public void moving(ServerSession session, Path srcPath, Path dstPath, Collection<CopyOption> opts) throws IOException {
+        System.out.println("moving: 准备移动文件");
+
+
+    }
+
+    @Override
+    public void moved(ServerSession session, Path srcPath, Path dstPath, Collection<CopyOption> opts, Throwable thrown) throws IOException {
+            System.out.println("moved: 文件移动成功");
+            System.out.println("源路径: " + srcPath);
+            System.out.println("目标路径: " + dstPath);
+    }
+
     private void validateFileType(Path filePath) throws IOException {
         // 如果是目录，则跳过检查
         if (Files.isDirectory(filePath)) {

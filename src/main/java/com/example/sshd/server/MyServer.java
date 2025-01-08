@@ -55,6 +55,7 @@ public class MyServer {
         sshServer.getProperties().put("auth-timeout", "10000"); // 10秒认证超时
         sshServer.getProperties().put("idle-timeout", "200000"); // 20秒空闲超时
         sshServer.getProperties().put("kb-server-interactive-prompt", "ppppaswword");
+        sshServer.getProperties().put("max-concurrent-sessions", "10");
         sshServer.setForwardingFilter(AcceptAllForwardingFilter.INSTANCE);
 
         // 设置用户在 SFTP 中的根目录
