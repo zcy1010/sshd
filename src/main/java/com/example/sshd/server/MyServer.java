@@ -6,12 +6,15 @@ import com.example.sshd.CustomSessionListener;
 import com.example.sshd.CustomSftpEventListener;
 import com.example.sshd.channel.CustomChannelListener;
 import com.example.sshd.err.DetailedSftpErrorStatusDataHandler;
+import com.example.sshd.thread1.CustomIoServiceFactoryFactory;
 import com.example.sshd.thread2.CustomIoServiceFactoryFactoryTwo;
 import com.example.sshd.thread2.CustomThreadPool;
 import com.example.sshd.thread3.CustomIoServiceFactoryFactoryThree;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import org.apache.sshd.common.util.threads.CloseableExecutorService;
 import org.apache.sshd.common.util.threads.ThreadUtils;
@@ -60,7 +63,7 @@ public class MyServer {
 
         // 设置用户在 SFTP 中的根目录
         // 使用自定义的文件系统工厂
-//        sshServer.setFileSystemFactory(new CustomFileSystemFactory());
+        sshServer.setFileSystemFactory(new CustomFileSystemFactory());
 
 //        String workingDir = "C:\\Users\\Administrator\\Desktop\\boctmp\\tmp";
 //        String workingDir1 = "C:\\Users\\Administrator\\Desktop\\boctmp\\1";
@@ -88,11 +91,11 @@ public class MyServer {
 //        sshServer.getNioWorkers();
 //        System.out.println(" sshServer.getNioWorkers();"+ sshServer.getNioWorkers());
         // 自定义定时线程池
-//        ScheduledExecutorService customScheduler = Executors.newScheduledThreadPool(2);
-//        sshServer.setScheduledExecutorService(customScheduler, false);
+        ScheduledExecutorService customScheduler = Executors.newScheduledThreadPool(2);
+        sshServer.setScheduledExecutorService(customScheduler, false);
 //        System.out.println("ddddd     "+sshServer.getScheduledExecutorService().toString());
         // 使用自定义的 IoServiceFactoryFactory
-//        sshServer.setIoServiceFactoryFactory(new CustomIoServiceFactoryFactory());
+        sshServer.setIoServiceFactoryFactory(new CustomIoServiceFactoryFactory());
 
         // TODO 2
         // 使用自定义线程池

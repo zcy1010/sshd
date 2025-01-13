@@ -1,6 +1,7 @@
 package com.example.sshd.err;
 
 import java.nio.file.FileSystemException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -42,12 +43,17 @@ public class DetailedSftpErrorStatusDataHandler implements SftpErrorStatusDataHa
                 + (Objects.equals(file, otherFile) ? "" : "[other=" + otherFile + "]")
                 + ": " + message;
             System.out.println("1212"+errorMsg+e);
+            System.out.println(Arrays.toString(e.getStackTrace()));
             return errorMsg;
         } else if (e instanceof SftpException) {
             System.out.println("1212"+""+e);
+            System.out.println(Arrays.toString(e.getStackTrace()));
+
             return e.toString();
         } else {
             System.out.println("1212"+""+e);
+            System.out.println(Arrays.toString(e.getStackTrace()));
+
             return "Internal " + e.getClass().getSimpleName() + ": " + e.getMessage();
         }
     }
