@@ -10,14 +10,20 @@ import com.example.sshd.thread1.CustomIoServiceFactoryFactory;
 import com.example.sshd.thread2.CustomIoServiceFactoryFactoryTwo;
 import com.example.sshd.thread2.CustomThreadPool;
 import com.example.sshd.thread3.CustomIoServiceFactoryFactoryThree;
+import com.google.common.base.Suppliers;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.function.Supplier;
 import org.apache.sshd.common.util.threads.CloseableExecutorService;
 import org.apache.sshd.common.util.threads.ThreadUtils;
+import org.apache.sshd.core.CoreModuleProperties;
 import org.apache.sshd.server.SshServer;
 import org.apache.sshd.server.auth.password.PasswordAuthenticator;
 import org.apache.sshd.server.forward.AcceptAllForwardingFilter;
@@ -25,6 +31,8 @@ import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
 import org.apache.sshd.server.session.ServerSession;
 import org.apache.sshd.server.shell.ProcessShellFactory;
 import org.apache.sshd.sftp.server.SftpSubsystemFactory;
+import org.springframework.boot.context.properties.bind.Bindable;
+//import com.google.common.base.Suppliers;
 
 /**
  *
@@ -35,35 +43,62 @@ import org.apache.sshd.sftp.server.SftpSubsystemFactory;
  */
 public class MyServer {
 
-    public static void main(String[] args) throws IOException {
-        SshServer sshServer = SshServer.setUpDefaultServer();
-        // 设置主机密钥
-        sshServer.setKeyPairProvider(new SimpleGeneratorHostKeyProvider(Paths.get("hostkey.ser")));
-        sshServer.setHost("0.0.0.0");
-        sshServer.setPort(2222);
-        sshServer.setPasswordAuthenticator(new PasswordAuthenticator() {
-            public boolean authenticate(String username, String password, ServerSession session) {
-                System.out.println("服务端 username "+username+"password "+password);
+    public static void main(String[] args) throws IOException, URISyntaxException {
+        try {
+            SshServer sshServer = SshServer.setUpDefaultServer();
+            // 设置主机密钥
+            URL resource = MyServer.class.getClassLoader().getResource("hostkey.ser");
+            Path path = Paths.get(resource.toURI());
 
-                // 在这里编写密码认证的逻辑
-                return ("zcy".equals(username) && "101072".equals(password))||("zcy2".equals(username) && "101072".equals(password))||("zcy3".equals(username) && "101072".equals(password));
+            sshServer.setKeyPairProvider(new SimpleGeneratorHostKeyProvider(path));
+            // 获取操作系统名称
+//        String osName = System.getProperty("os.name").toLowerCase();
+//        String keyPath;
+//
+//        // 根据操作系统设置主机密钥路径
+//        if (osName.contains("win")) {
+//            keyPath = "C:\\ProgramData\\ssh\\ssh_host_rsa_key"; // Windows 默认路径
+//        } else {
+//            keyPath = "/etc/ssh/ssh_host_rsa_key"; // Linux 默认路径
+//        }
 
-            }
-        });
+            // 设置主机密钥提供者
+//        sshServer.setKeyPairProvider(new SimpleGeneratorHostKeyProvider(Paths.get(keyPath)));
+
+            sshServer.setHost("0.0.0.0");
+
+            sshServer.setPort(2222);
+            sshServer.setPasswordAuthenticator(new PasswordAuthenticator() {
+                public boolean authenticate(String username, String password, ServerSession session) {
+                    System.out.println("服务端 username "+username+"password "+password);
+
+                    // 在这里编写密码认证的逻辑
+                    return ("zcy".equals(username) && "101072".equals(password))||("zcy2".equals(username) && "101072".equals(password))||("zcy3".equals(username) && "101072".equals(password));
+
+                }
+            });
 
 
-        sshServer.setShellFactory(new ProcessShellFactory("powershell.exe", "-Command"));
-        sshServer.addSessionListener(new CustomSessionListener());
+            sshServer.setShellFactory(new ProcessShellFactory("powershell.exe", "-Command"));
+            sshServer.addSessionListener(new CustomSessionListener());
 
-        sshServer.getProperties().put("auth-timeout", "10000"); // 10秒认证超时
-        sshServer.getProperties().put("idle-timeout", "200000"); // 20秒空闲超时
-        sshServer.getProperties().put("kb-server-interactive-prompt", "ppppaswword");
-        sshServer.getProperties().put("max-concurrent-sessions", "10");
-        sshServer.setForwardingFilter(AcceptAllForwardingFilter.INSTANCE);
+            sshServer.getProperties().put(CoreModuleProperties.AUTH_TIMEOUT.getName(), "1000000"); // 认证超时
+            sshServer.getProperties().put(CoreModuleProperties.IDLE_TIMEOUT.getName(), "1000000"); // 空闲超时
+            sshServer.getProperties().put(CoreModuleProperties.MAX_CONCURRENT_SESSIONS.getName(), "100"); // 每个用户的最大连接数（session）
+            sshServer.getProperties().put("idle-timeout", "200000000"); // 20秒
+//        sshServer.getProperties().put("kb-server-interactive-prompt", "ppppaswword");
+            //每个用户的最大连接数（session）
+            sshServer.getProperties().put("max-concurrent-sessions", "3");
+            // 全局最大通道数
+//            sshServer.getProperties().put(CoreModuleProperties.MAX_CONCURRENT_CHANNELS.getName(), "15");
+//            sshServer.getProperties().put(CoreModuleProperties.PASSWORD_PROMPTS.getName(), "2");
+//            sshServer.getProperties().put(CoreModuleProperties.MAX_AUTH_REQUESTS.getName(), "10");
 
-        // 设置用户在 SFTP 中的根目录
-        // 使用自定义的文件系统工厂
-        sshServer.setFileSystemFactory(new CustomFileSystemFactory());
+            sshServer.setForwardingFilter(AcceptAllForwardingFilter.INSTANCE);
+
+            // 设置用户在 SFTP 中的根目录
+            // 使用自定义的文件系统工厂
+            sshServer.setFileSystemFactory(new CustomFileSystemFactory());
 
 //        String workingDir = "C:\\Users\\Administrator\\Desktop\\boctmp\\tmp";
 //        String workingDir1 = "C:\\Users\\Administrator\\Desktop\\boctmp\\1";
@@ -73,53 +108,66 @@ public class MyServer {
 //        fileSystemFactory.setUserHomeDir("zcy",Paths.get(workingDir1));
 //        fileSystemFactory.setUserHomeDir("zcy2",Paths.get(workingDir2));
 //        fileSystemFactory.setDefaultHomeDir(Paths.get(workingDir));
-        sshServer.setFileSystemFactory(new CustomFileSystemFactory());
+            sshServer.setFileSystemFactory(new CustomFileSystemFactory());
 
 
-        // 配置 SFTP 子系统（如果需要的话）
-        SftpSubsystemFactory factory = new SftpSubsystemFactory.Builder().build();
-        factory.setErrorStatusDataHandler(new DetailedSftpErrorStatusDataHandler());
+            // 配置 SFTP 子系统（如果需要的话）
+            SftpSubsystemFactory factory = new SftpSubsystemFactory.Builder().build();
+//        factory.setErrorStatusDataHandler(new DetailedSftpErrorStatusDataHandler());
 
-        // 注册自定义文件校验监听器
-        factory.addSftpEventListener(new CustomSftpEventListener());
-        sshServer.setSubsystemFactories(Collections.singletonList(factory));
-        //TODO 自定义线程池
+            // 注册自定义文件校验监听器
+            factory.addSftpEventListener(new CustomSftpEventListener());
+            sshServer.setSubsystemFactories(Collections.singletonList(factory));
+            factory.setExecutorServiceProvider(
+                Suppliers.ofInstance(ThreadUtils.newFixedThreadPool("fileTrans111",500)));
+            //TODO 自定义线程池
 
-        // TODO 1
-        // 自定义 NIO Workers 默认cpu核心线程数+1 负责处理网络的 IO 操作。比如处理 Socket 的读写操作，解析协议等。
-        sshServer.setNioWorkers(10);
+            // TODO 1
+            // 自定义 NIO Workers 默认cpu核心线程数+1 负责处理网络的 IO 操作。比如处理 Socket 的读写操作，解析协议等。
+//            sshServer.setNioWorkers(10);
 //        sshServer.getNioWorkers();
 //        System.out.println(" sshServer.getNioWorkers();"+ sshServer.getNioWorkers());
-        // 自定义定时线程池
-        ScheduledExecutorService customScheduler = Executors.newScheduledThreadPool(2);
-        sshServer.setScheduledExecutorService(customScheduler, false);
+            // 自定义定时线程池
+            ScheduledExecutorService customScheduler = Executors.newScheduledThreadPool(2);
+            sshServer.setScheduledExecutorService(customScheduler, false);
 //        System.out.println("ddddd     "+sshServer.getScheduledExecutorService().toString());
-        // 使用自定义的 IoServiceFactoryFactory
-        sshServer.setIoServiceFactoryFactory(new CustomIoServiceFactoryFactory());
+            // 使用自定义的 IoServiceFactoryFactory
+            sshServer.setIoServiceFactoryFactory(new CustomIoServiceFactoryFactory());
 
-        // TODO 2
-        // 使用自定义线程池
+            // TODO 2
+            // 使用自定义线程池
 //        CloseableExecutorService executorService = CustomThreadPool.create(4, "SSHwwD");
-        // 创建 resume tasks 线程池
+            // 创建 resume tasks 线程池
 //        CloseableExecutorService resumeTasksExecutorService = ThreadUtils.newFixedThreadPool("dfgdsfgsdfg-tasks-thread-pool", 2);
-        // 使用自定义的 IoServiceFactoryFactory
+            // 使用自定义的 IoServiceFactoryFactory
 //        sshServer.setIoServiceFactoryFactory(new CustomIoServiceFactoryFactoryTwo(executorService, resumeTasksExecutorService));
 
-        // TODO 3
+            // TODO 3
 //        sshServer.setIoServiceFactoryFactory(CustomIoServiceFactoryFactoryThree.createWithCustomPools());
-        // 配置自定义线程池
-        CustomIoServiceFactoryFactoryThree ioFactory = CustomIoServiceFactoryFactoryThree.createWithCustomPools();
-        sshServer.setIoServiceFactoryFactory(ioFactory);
-        CustomIoServiceEventListener  customIoServiceEventListener=new CustomIoServiceEventListener();
-        sshServer.setIoServiceEventListener(customIoServiceEventListener);
-        sshServer.addChannelListener(new CustomChannelListener());
+            // 配置自定义线程池
+                CustomIoServiceFactoryFactoryThree ioFactory = CustomIoServiceFactoryFactoryThree.createWithCustomPools();
+                sshServer.setIoServiceFactoryFactory(ioFactory);
+                CustomIoServiceEventListener  customIoServiceEventListener=new CustomIoServiceEventListener();
+                sshServer.setIoServiceEventListener(customIoServiceEventListener);
+            sshServer.addChannelListener(new CustomChannelListener());
 
-        sshServer.start();
-        // 打印线程池状态
+            System.out.println("sshServer.getKeyExchangeFactories() 秘钥交换 :"+sshServer.getKeyExchangeFactories());
+            System.out.println("sshServer.getCipherFactories() 加密算法:"+sshServer.getCipherFactories());
+            System.out.println("sshServer.getMacFactories() mac算法:"+sshServer.getMacFactories());
+            System.out.println("sshServer.getSignatureFactories()  主机秘钥算法:"+sshServer.getSignatureFactories());
+
+
+            sshServer.start();
+            // 打印线程池状态
 //        logThreadPoolStatus(ioFactory);
-        System.out.println(sshServer.getNioWorkers());
+            System.out.println(sshServer.getNioWorkers());
+            System.out.println("SSH server started...");
 
-        System.out.println("SSH server started...");
+        }catch (Exception e){
+            System.out.println(e.getMessage());
+        }
+
+
         try {
             // 在此处，主线程会被阻塞，直到你手动停止
             Thread.sleep(Long.MAX_VALUE);

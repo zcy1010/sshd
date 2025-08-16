@@ -28,11 +28,14 @@ public class CustomFileSystemFactory implements FileSystemFactory {
         Path homeDir;
 
         if ("zcy".equals(username)) {
-            homeDir = Paths.get("C:\\Users\\Administrator\\Desktop\\boctmp\\1");
+//            homeDir = Paths.get("C:\\Users\\Administrator\\Desktop\\boctmp\\1");
+            homeDir = Paths.get("/share/file/zcy");
         } else if ("zcy2".equals(username)) {
-            homeDir = Paths.get("C:\\Users\\Administrator\\Desktop\\boctmp\\2");
+//            homeDir = Paths.get("C:\\Users\\Administrator\\Desktop\\boctmp\\2");
+            homeDir = Paths.get("/share/file/zcy2");
         } else {
-            homeDir = Paths.get("C:\\Users\\Administrator\\Desktop\\boctmp\\tmp");
+//            homeDir = Paths.get("C:\\Users\\Administrator\\Desktop\\boctmp\\tmp");
+            homeDir = Paths.get("/share/file/tmp");
         }
 
         System.out.println("User: " + username + ", Home directory: " + homeDir);

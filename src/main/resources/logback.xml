@@ -13,6 +13,6 @@
   </root>
 
   <!-- 单独为某些包设置日志级别 -->
-<!--  <logger name="com.example" level="debug" />-->
-<!--  <logger name="org.apache.sshd" level="trace" />-->
+  <logger name="org.apache.sshd.common.kex" level="TRACE" />
+  <logger name="org.apache.sshd.server.session" level="TRACE" />
 </configuration>

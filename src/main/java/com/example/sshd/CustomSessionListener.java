@@ -19,12 +19,12 @@ public class CustomSessionListener implements SessionListener {
     /**
      * 最大连接数
      */
-    private static final int MAX_GLOBAL_CONNECTIONS = 100;
+    private static final int MAX_GLOBAL_CONNECTIONS = 1000;
 
     /**
      * 每个用户的最大会话数
      */
-    private static final int MAX_SESSIONS_PER_USER = 20;
+    private static final int MAX_SESSIONS_PER_USER = 200;
 
     /**
      * 当前连接计数
@@ -41,35 +41,6 @@ public class CustomSessionListener implements SessionListener {
      * 定时任务线程池
      */
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-
-    /**
-     * 构造方法
-     */
-//    public CustomSessionListener() {
-//        // 启动定时任务，每隔 5 秒打印连接状态
-//        scheduler.scheduleAtFixedRate(() -> {
-//            try {
-//                printConnectionStatus();
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//        }, 0, 5, TimeUnit.SECONDS); // 初始延迟为 0 秒，每隔 5 秒执行一次
-//    }
-
-    /**
-     * 打印当前连接状态
-     */
-    private void printConnectionStatus() {
-        System.out.println("=======================================");
-        System.out.println("当前全局连接数: " + globalConnectionCount.get());
-
-        System.out.println("当前每个用户的连接数:");
-        userSessionCounts.forEach((username, count) -> {
-            System.out.println("  用户: " + username + ", 连接数: " + count.get());
-        });
-
-        System.out.println("=======================================");
-    }
 
     /**
      * 生命周期阶段：会话对象刚刚被创建时调用。

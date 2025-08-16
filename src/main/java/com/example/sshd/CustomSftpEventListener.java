@@ -32,13 +32,30 @@ public class CustomSftpEventListener implements SftpEventListener {
     private static final Set<String> DISALLOWED_FILE_EXTENSIONS = new HashSet<>(
         Arrays.asList(".zip", ".txt"));
     // 最大允许的文件大小（1MB）
-    private static final long MAX_FILE_SIZE = 10*1024 * 1024;
+    private static final long MAX_FILE_SIZE = 1 * 1024 * 1024;
     private static final boolean DISABLE_UPLOAD = true;
     private static final boolean DISABLE_DELETE = true;
     private final Map<Path, Boolean> fileLimitExceeded = new ConcurrentHashMap<>();
 
     @Override
-    public void opening(ServerSession session, String remoteHandle, Handle localHandle) throws IOException {
+    public void reading(ServerSession session, String remoteHandle, FileHandle localHandle,
+        long offset, byte[] data, int dataOffset, int dataLen) throws IOException {
+
+        System.out.println("reading"+offset);
+    }
+
+    @Override
+    public void read(ServerSession session, String remoteHandle, FileHandle localHandle,
+        long offset, byte[] data, int dataOffset, int dataLen, int readLen, Throwable thrown)
+        throws IOException {
+        System.out.println("read"+offset);
+
+    }
+
+    @Override
+    public void opening(ServerSession session, String remoteHandle, Handle localHandle)
+        throws IOException {
+        System.out.println("opening");
         Path filePath = localHandle.getFile();
         // 如果文件重新打开（例如新的上传操作），清除超限标记
         if (fileLimitExceeded.containsKey(filePath)) {
@@ -50,49 +67,79 @@ public class CustomSftpEventListener implements SftpEventListener {
             return;
         }
         // 1. 校验文件类型
-        validateFileType(filePath);
+//        validateFileType(filePath);
+    }
+
+    @Override
+    public void open(ServerSession session, String remoteHandle, Handle localHandle) throws IOException{
+        System.out.println("open");
+
+    }
+
+    @Override
+    public void closing(ServerSession session, String remoteHandle, Handle localHandle) throws IOException{
+
+        Path filePath = localHandle.getFile();
+        System.out.println(filePath+"  closing");
     }
     @Override
-    public void writing(ServerSession session, String remoteHandle, FileHandle localHandle, long offset, byte[] data, int dataOffset, int dataLen) throws IOException {
-        System.out.println("当前线程: " + Thread.currentThread().getName());
+    public void closed(ServerSession session, String remoteHandle, Handle localHandle, Throwable thrown) throws IOException{
+        Path filePath = localHandle.getFile();
+        System.out.println(filePath+"  closed");
+
+    }
+
+
+    @Override
+    public void writing(ServerSession session, String remoteHandle, FileHandle localHandle,
+        long offset, byte[] data, int dataOffset, int dataLen) throws IOException {
+//        System.out.println("当前线程: " + Thread.currentThread().getName());
         if (DISABLE_UPLOAD) {
             Path filePath = localHandle.getFile();
-            System.out.println("writing上传文件: " + filePath.getFileName());
+//            System.out.println("writing上传文件: " + filePath.getFileName());
         }
 
         Path filePath = localHandle.getFile();
         // 如果文件已经被标记为超限，直接抛异常
         if (fileLimitExceeded.getOrDefault(filePath, false)) {
+            System.out.println("文件大小超出限制1111" + filePath.toString());
+
             throw new IOException("文件大小超出限制: " + filePath.getFileName());
         }
         // 校验文件大小
 
-        if(!validateFileSize(offset, dataLen)){
+        if (!validateFileSize(offset, dataLen)) {
             fileLimitExceeded.put(filePath, true);
             localHandle.close();
-            System.out.println("文件大小超出限制" + filePath.toString());
+            System.out.println("文件大小超出限制2222" + filePath.toString());
             // 清理本地文件
             cleanUpFile(filePath);
         }
 
     }
+
     @Override
-    public void written(ServerSession session, String remoteHandle, FileHandle localHandle, long offset, byte[] data, int dataOffset, int dataLen, Throwable thrown) throws IOException {
+    public void written(ServerSession session, String remoteHandle, FileHandle localHandle,
+        long offset, byte[] data, int dataOffset, int dataLen, Throwable thrown)
+        throws IOException {
         if (DISABLE_UPLOAD) {
             Path filePath = localHandle.getFile();
             System.out.println("written上传文件已触发: " + filePath.getFileName());
 
         }
     }
+
     @Override
-    public void creating(ServerSession session, Path path, Map<String, ?> attrs) throws IOException {
+    public void creating(ServerSession session, Path path, Map<String, ?> attrs)
+        throws IOException {
         if (DISABLE_UPLOAD) {
             System.out.println("creating上传文件: " + path.getFileName());
         }
     }
 
     @Override
-    public void created(ServerSession session, Path path, Map<String, ?> attrs, Throwable thrown) throws IOException {
+    public void created(ServerSession session, Path path, Map<String, ?> attrs, Throwable thrown)
+        throws IOException {
         // 上传完成后，触发此回调。如果禁止上传，可以在此处处理额外逻辑（如果需要）。
         if (DISABLE_UPLOAD) {
             System.out.println("created上传文件已触发: " + path.getFileName());
@@ -112,7 +159,8 @@ public class CustomSftpEventListener implements SftpEventListener {
     }
 
     @Override
-    public void removed(ServerSession session, Path path, boolean isDirectory, Throwable thrown) throws IOException {
+    public void removed(ServerSession session, Path path, boolean isDirectory, Throwable thrown)
+        throws IOException {
         // 如果删除被触发，可以记录日志。
         if (DISABLE_DELETE) {
             System.out.println("removed尝试删除文件被拒绝: " + path.getFileName());
@@ -121,17 +169,19 @@ public class CustomSftpEventListener implements SftpEventListener {
     }
 
     @Override
-    public void moving(ServerSession session, Path srcPath, Path dstPath, Collection<CopyOption> opts) throws IOException {
+    public void moving(ServerSession session, Path srcPath, Path dstPath,
+        Collection<CopyOption> opts) throws IOException {
         System.out.println("moving: 准备移动文件");
 
 
     }
 
     @Override
-    public void moved(ServerSession session, Path srcPath, Path dstPath, Collection<CopyOption> opts, Throwable thrown) throws IOException {
-            System.out.println("moved: 文件移动成功");
-            System.out.println("源路径: " + srcPath);
-            System.out.println("目标路径: " + dstPath);
+    public void moved(ServerSession session, Path srcPath, Path dstPath,
+        Collection<CopyOption> opts, Throwable thrown) throws IOException {
+        System.out.println("moved: 文件移动成功");
+        System.out.println("源路径: " + srcPath);
+        System.out.println("目标路径: " + dstPath);
     }
 
     private void validateFileType(Path filePath) throws IOException {
@@ -143,21 +193,17 @@ public class CustomSftpEventListener implements SftpEventListener {
         for (String disallowedExtension : DISALLOWED_FILE_EXTENSIONS) {
             if (fileName.endsWith(disallowedExtension)) {
                 System.out.println("文件类型不符合要求: " + fileName);
-                throw new IOException("文件类型不符合要求: " + fileName + ". 不允许以下类型的文件上传或下载: " + DISALLOWED_FILE_EXTENSIONS);
+                throw new IOException("文件类型不符合要求: " + fileName + ". 不允许以下类型的文件上传或下载: "
+                    + DISALLOWED_FILE_EXTENSIONS);
             }
         }
     }
 
-    private boolean validateFileSize(long offset,int newDataLength) throws IOException {
+    private boolean validateFileSize(long offset, int newDataLength) throws IOException {
 
         // 计算写入后的文件大小
         long finalSize = offset + newDataLength;
         return finalSize <= MAX_FILE_SIZE;
-
-//        if (finalSize > MAX_FILE_SIZE) {
-//            System.out.println("文件大小不符合要求"+filePath);
-//            throw new IOException("File size exceeds the maximum allowed limit of " + MAX_FILE_SIZE / (1024 * 1024) + " MB.");
-//        }
     }
 
     private void cleanUpFile(Path filePath) {
